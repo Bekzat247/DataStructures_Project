@@ -1,104 +1,134 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Scanner;
+import java.util.*;
 
 public class ProjectMain {
-    private static HashSet<String> myCourses = new HashSet<>();
-
-    private static HashMap<String, String> rules = new HashMap<>();
+    static HashMap<String, HashSet<String>> prereqs = new HashMap<>();
+    static HashMap<String, HashSet<String>> completed = new HashMap<>();
 
     public static void main(String[] args) {
-        rules.put("MATH2", "MATH1");
-        rules.put("JAVA2", "JAVA1");
-        rules.put("ALGORITHMS", "JAVA2");
+        Scanner sc = new Scanner(System.in);
 
-        Scanner input = new Scanner(System.in);
+        System.out.println("Course enrollment planner : ");
+        printHelp();
+        System.out.println("---------------------------------");
 
-        while(true){
-            System.out.println();
-            System.out.println("Your courses: [");
-            for (String i : myCourses){
-                System.out.println(" ".repeat(5) + i);
-            }
-            System.out.println("]");
-            System.out.println("List of commands:");
-            System.out.println("ADD <course>    - Add finished course");
-            System.out.println("CHECK <course>  - Can I take this course?");
-            System.out.println("BENCH           - Compare HashSet vs ArrayList");
-            System.out.println("EXIT            - Close program");
-            System.out.print("Action: ");
+        while (true) {
+            showAllCourses();
 
-            String action = input.nextLine();
-            while(action.isEmpty()){
-                System.out.print("Input is empty. Write again : ");
-                String again = input.nextLine();
-                action = again;
-            }
+            System.out.print("> ");
+            String line = sc.nextLine().trim();
+            if (line.isEmpty()) continue;
 
-            String[] parts = action.split(" ", 2);
+            String[] p = line.split(" ");
+            String cmd = p[0].toUpperCase();
 
-            switch (parts[0].toUpperCase()){
-                case "ADD":
-                    if (parts.length < 2) System.out.println("Error: Name required.");
-                    else addCourse(parts[1].toUpperCase());
+            if (cmd.equals("EXIT")) break;
+
+            switch (cmd){
+                case "ADD_COURSE":if (p.length> 1){
+                    addCourse(p[1]);
+                }
                     break;
-                case "CHECK":
-                    if (parts.length < 2) System.out.println("Error: Name required.");
-                    else checkCourse(parts[1].toUpperCase());
+                case "ADD_PREREQ":
+                    if(p.length> 2){
+                        addPrereq(p[1], p[2]);
+
+                    }
                     break;
-                case "BENCH":
-                    runBenchmark();
+                case "PREREQS" : if (p.length > 1){
+                    showPrereqs(p[1]);
+                }break;
+                case "COMPLETE" :
+                    if(p.length > 2){
+                        completeCourse(p[1], p[2]);
+
+                    }break;
+                case "DONE" : if (p.length> 1){
+                 showDone(p[1]);
+                }break;
+                case "CAN_TAKE" : if (p.length > 2){
+                    checkCanTake(p[1], p[2]);
+
+                }break;
+                case "HELP":
+                    printHelp();
                     break;
-                case "EXIT":
-                    System.out.println("Exiting program...");
-                    return;
                 default:
-                    System.out.println("Unknown command.");
+                    System.out.println("Unknown command or missing arguments.");
+                    break;
             }
+
         }
+        System.out.println("Goodbye!");
     }
 
-    private static void addCourse(String n) {
-        myCourses.add(n);
-        System.out.println("Added: " + n);
-    }
 
-    private static void checkCourse(String n) {
-        String need = rules.get(n);
-
-        if (need == null) {
-            System.out.println("Yes! No prerequisites for " + n);
-        } else if (myCourses.contains(need)) {
-            System.out.println("Yes! You can take " + n + " because you finished " + need);
+    public static void showAllCourses() {
+        if (prereqs.isEmpty()) {
+            System.out.println("No courses created yet ");
         } else {
-            System.out.println("NO! You must finish " + need + " first.");
+            System.out.println("CURRENT COURSES: " + prereqs.keySet());
         }
     }
 
-    private static void runBenchmark() {
-        int n = 100000;
-        System.out.println("Benchmarking Search (contains) for N = " + n);
+    public static void addCourse(String course) {
+        prereqs.putIfAbsent(course, new HashSet<>());
+        System.out.println("Added course: " + course);
+    }
 
-        HashSet<String> set = new HashSet<>();
-        ArrayList<String> list = new ArrayList<>();
+    public static void addPrereq(String course, String prereq) {
+        if (course.equals(prereq)) {
+            System.out.println("A course cannot be its own prerequisite");
+            return;
+        }
+        prereqs.putIfAbsent(course, new HashSet<>());
+        prereqs.putIfAbsent(prereq, new HashSet<>());
+        prereqs.get(course).add(prereq);
+        System.out.println("Added prereq: " + prereq + " -> " + course);
+    }
 
-        for (int i = 0; i < n; i++) {
-            set.add("C" + i);
-            list.add("C" + i);
+    public static void showPrereqs(String course) {
+        if (!prereqs.containsKey(course)) {
+            System.out.println("Course not found");
+        } else {
+            System.out.println("Prereqs for " + course + ": " + prereqs.get(course));
+        }
+    }
+
+    public static void completeCourse(String student, String course) {
+        completed.computeIfAbsent(student, k -> new HashSet<>()).add(course);
+        System.out.println(student + " completed " + course);
+    }
+
+    public static void showDone(String student) {
+        if (!completed.containsKey(student)) {
+            System.out.println("No record for student: " + student);
+        } else {
+            System.out.println(student + "'s completed courses: " + completed.get(student));
+        }
+    }
+
+    public static void checkCanTake(String student, String course) {
+        if (!prereqs.containsKey(course)) {
+            System.out.println("YES (Course doesn't exist, assuming no prereqs)");
+            return;
         }
 
-        String target = "C" + (n - 1);
+        HashSet<String> courseDeps = prereqs.get(course);
+        if (courseDeps.isEmpty()) {
+            System.out.println("YES");
+            return;
+        }
 
-        long startSet = System.nanoTime();
-        set.contains(target);
-        long endSet = System.nanoTime();
+        HashSet<String> studentHas = completed.getOrDefault(student, new HashSet<>());
+        if (studentHas.containsAll(courseDeps)) {
+            System.out.println("YES");
+        } else {
+            System.out.println("NO");
+        }
+    }
 
-        long startList = System.nanoTime();
-        list.contains(target);
-        long endList = System.nanoTime();
 
-        System.out.println("HashSet Search (O(1)): " + (endSet - startSet) + " ns");
-        System.out.println("ArrayList Search (O(n)): " + (endList - startList) + " ns");
+    public static void printHelp() {
+        System.out.println("Commands: ADD_COURSE <C>, ADD_PREREQ <C> <P>, PREREQS <C>, COMPLETE <S> <C>, DONE <S>, CAN_TAKE <S> <C>, HELP, EXIT");
     }
 }
