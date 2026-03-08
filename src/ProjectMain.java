@@ -52,6 +52,7 @@ public class ProjectMain {
                 case "HELP":
                     printHelp();
                     break;
+                case "BENCH": runBenchmark(); break;
                 default:
                     System.out.println("Unknown command or missing arguments.");
                     break;
@@ -129,6 +130,34 @@ public class ProjectMain {
 
 
     public static void printHelp() {
-        System.out.println("Commands: ADD_COURSE <C>, ADD_PREREQ <C> <P>, PREREQS <C>, COMPLETE <S> <C>, DONE <S>, CAN_TAKE <S> <C>, HELP, EXIT");
+        System.out.println("Commands: ADD_COURSE <C>, ADD_PREREQ <C> <P>, PREREQS <C>, COMPLETE <S> <C>, DONE <S>, CAN_TAKE <S> <C>, BENCH,  HELP, EXIT");
+    }
+    public static void runBenchmark() {
+        int n = 100000;
+        HashSet<String> set = new HashSet<>();
+        ArrayList<String> list = new ArrayList<>();
+
+        // Наполнение (не замеряем)
+        for (int i = 0; i < n; i++) {
+            set.add("C" + i);
+            list.add("C" + i);
+        }
+
+        String target = "C" + (n - 1); // Худший случай (последний элемент)
+
+        // Замер HashSet
+        long t1 = System.nanoTime();
+        set.contains(target);
+        long t2 = System.nanoTime();
+
+        // Замер ArrayList
+        long t3 = System.nanoTime();
+        list.contains(target);
+        long t4 = System.nanoTime();
+
+        // Вывод в наносекундах (ns) - так нагляднее разница
+        System.out.println("N = " + n);
+        System.out.println("HashSet Search: " + (t2 - t1) + " ns (O(1))");
+        System.out.println("ArrayList Search: " + (t4 - t3) + " ns (O(n))");
     }
 }
