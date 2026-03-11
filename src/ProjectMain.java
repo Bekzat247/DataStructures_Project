@@ -15,7 +15,7 @@ public class ProjectMain {
             showAllCourses();
 
             System.out.print("> ");
-            String line = sc.nextLine().trim();
+            String line = sc.nextLine();
             if (line.isEmpty()) continue;
 
             String[] p = line.split(" ");
@@ -137,25 +137,25 @@ public class ProjectMain {
         HashSet<String> set = new HashSet<>();
         ArrayList<String> list = new ArrayList<>();
 
-        // Наполнение (не замеряем)
+
         for (int i = 0; i < n; i++) {
             set.add("C" + i);
             list.add("C" + i);
         }
 
-        String target = "C" + (n - 1); // Худший случай (последний элемент)
+        String target = "C" + (n - 1);
 
-        // Замер HashSet
+
         long t1 = System.nanoTime();
         set.contains(target);
         long t2 = System.nanoTime();
 
-        // Замер ArrayList
+
         long t3 = System.nanoTime();
         list.contains(target);
         long t4 = System.nanoTime();
 
-        // Вывод в наносекундах (ns) - так нагляднее разница
+
         System.out.println("N = " + n);
         System.out.println("HashSet Search: " + (t2 - t1) + " ns (O(1))");
         System.out.println("ArrayList Search: " + (t4 - t3) + " ns (O(n))");
